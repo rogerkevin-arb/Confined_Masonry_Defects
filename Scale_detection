@@ -1,0 +1,80 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+img = cv2.imread('/path/to/tu_imagen.jpg')  # ejemplo de referencia
+
+# Copia para procesar
+img_for_processing = img.copy()
+
+# Convertir a HSV para detección de color
+hsv = cv2.cvtColor(img_for_processing, cv2.COLOR_BGR2HSV)
+
+# Rango de color verde fluorescente
+lower_green = np.array([35, 40, 40])
+upper_green = np.array([85, 255, 255])
+
+# Máscara
+mask1 = cv2.inRange(hsv, lower_green, upper_green)
+
+# Encontrar contornos
+contornos, _ = cv2.findContours(mask1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+# Dibujo sobre una copia limpia
+img_dibujo = img.copy()
+
+# Dibujar sobre copia si se detecta un cuadrado
+if contornos:
+    contorno_mayor = max(contornos, key=cv2.contourArea)
+    epsilon = 0.02 * cv2.arcLength(contorno_mayor, True)
+    approx = cv2.approxPolyDP(contorno_mayor, epsilon, True)
+
+    if len(approx) == 4:
+        x, y, w, h = cv2.boundingRect(approx)
+        cv2.rectangle(img_dibujo, (x, y), (x + w, y + h), (0, 255, 0), 3)
+        print("Cuadrado verde detectado")
+    else:
+        print("No se detectó un cuadrado")
+else:
+    print("No se detectó ningún contorno")
+
+# Convertir BGR a RGB para mostrar con matplotlib
+img_rgb = cv2.cvtColor(img_dibujo, cv2.COLOR_BGR2RGB)
+
+# Mostrar con título y ejes
+plt.figure(figsize=(6, 4))
+plt.imshow(img_rgb)
+plt.title("Detección de Cuadro Verde")
+plt.xlabel("Eje X (pixeles)")
+plt.ylabel("Eje Y (pixeles)")
+plt.grid(False)
+plt.show()
+
+# Escalado
+print(f"Ancho estimado de la escala verde: {(w+h)/2} píxeles")
+longitud_real_mm = 20
+escala_pixeles_por_mm = ((w + h)/2) / longitud_real_mm
+print(f"Escala: {escala_pixeles_por_mm:.3f} píxeles por mm")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
