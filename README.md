@@ -1,6 +1,10 @@
 # Codes_Masonry
 This repository contains the main codes used for crack semantic segmentation, brick type classification, and detection of spalling regions.
 
+Pioneering study on the detection of diverse defects in real confined masonry structures with irregular surfaces (model capable of detecting cracks crossing three different materials). In addition, it includes the automatic estimation of crack widths using HSV-based filters for the detection of square templates, without the need for training from scratch.
+
+![Architecture Overview](images/Cmasonry.png)
+
 ## Table of Contents
 - [Description](#description)
 - [Models](#models)
