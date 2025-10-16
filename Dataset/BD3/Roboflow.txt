@@ -1,0 +1,13 @@
+!pip install roboflow
+
+from roboflow import Roboflow
+rf = Roboflow(api_key="4kCXQVv3472M9OQVjdSg")
+project = rf.workspace("pelota-fzva7").project("spalling-7ltve")
+version = project.version(5)
+dataset = version.download("yolov11")
+                
+
+#----------------------------------------------------
+# The current dataset can be downloaded directly from Roboflow.
+
+# https://app.roboflow.com/ds/LLlETWVFHE?key=ypWV19AiRc
