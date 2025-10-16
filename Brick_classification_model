@@ -1,0 +1,87 @@
+
+# 1) Here, the original dimensions(512x512) are reduced and converted to grayscale ("PREPROCESSING").
+
+ALTO = 128
+ANCHO = 128
+
+datos_entrenamiento = []
+
+for i, (imagen, etiqueta) in enumerate(datos['train']): #Todos los datos
+  imagen = cv2.resize(imagen, (ALTO, ANCHO))
+  imagen = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
+  imagen = imagen.reshape(ALTO, ANCHO, 1) #Cambiar tamano a 100,100,1
+  datos_entrenamiento.append([imagen, etiqueta])
+
+# ---------------------------------------------
+X = [] #imagenes de entrada (pixeles)
+y = [] #etiquetas (Pandereta o Macizo)
+
+for imagen, etiqueta in datos_entrenamiento:
+  X.append(imagen)
+  y.append(etiqueta)
+
+# ---------------------------------------------
+#Normalizar los datos de las X (imagenes). Se pasan a numero flotante y dividen entre 255 para quedar de 0-1 en lugar de 0-255
+import numpy as np
+
+X = np.array(X).astype(float) / 255
+
+# ---------------------------------------------
+#Convertir etiquetas en arreglo simple
+y = np.array(y)
+
+# 2) CNN MODEL 
+
+modeloCNN = tf.keras.models.Sequential([
+  tf.keras.layers.Conv2D(32, (3,3), activation='relu', input_shape=(ALTO, ANCHO, 1)),
+  tf.keras.layers.MaxPooling2D(2, 2),
+  tf.keras.layers.Conv2D(64, (3,3), activation='relu'),
+  tf.keras.layers.MaxPooling2D(2, 2),
+  tf.keras.layers.Conv2D(128, (3,3), activation='relu'),
+  tf.keras.layers.MaxPooling2D(2, 2),
+
+  tf.keras.layers.Flatten(),
+  tf.keras.layers.Dense(100, activation='relu'),
+  tf.keras.layers.Dense(1, activation='sigmoid')
+])
+
+# ---------------------------------------------
+
+#Compilar modelos. Usar crossentropy binario ya que tenemos solo 2 opciones (perro o gato)
+
+modeloCNN.compile(optimizer='adam',
+                    loss='binary_crossentropy',
+                    metrics=['accuracy'])
+
+# ---------------------------------------------
+
+from tensorflow.keras.callbacks import ModelCheckpoint
+
+tensorboardCNN = TensorBoard(log_dir='logs/cnn')
+
+# Callback para guardar el mejor modelo según val_accuracy
+checkpoint = ModelCheckpoint('clasificador_superficie_SA.h5',
+                             monitor='val_loss',
+                             save_best_only=True,
+                             mode='min',
+                             verbose=1)
+
+historial1 = modeloCNN.fit(X, y,
+                          batch_size=32,
+                          validation_split=0.15,
+                          epochs=150,
+                          callbacks=[tensorboardCNN, checkpoint])
+
+# ---------------------------------------------
+
+# Guarda el historial en un archivo .pkl
+import pickle
+
+with open('clasificador_superficie_SA.pkl', 'wb') as f:
+    pickle.dump(historial1.history, f)
+
+
+
+
+
+
