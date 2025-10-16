@@ -1,0 +1,35 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+from skimage.morphology import skeletonize
+from skimage.measure import label, regionprops
+
+# Asegurarse que los valores sean 0 y 1
+binary = (binary_mask > 0).astype(np.uint8)
+
+# Obtener el esqueleto
+skeleton = skeletonize(binary).astype(np.uint8)
+
+# Mapa de distancias
+dist_transform = cv2.distanceTransform(binary, distanceType=cv2.DIST_L2, maskSize=5)
+
+# Calcular ancho
+crack_width_map = dist_transform * skeleton * 2
+
+# Calcular ancho promedio
+mean_width = crack_width_map[crack_width_map > 0].mean()
+print(f"Ancho promedio estimado de la grieta: {mean_width:.2f} píxeles")
+
+# Ubicar el punto con mayor ancho
+max_idx = np.unravel_index(np.argmax(crack_width_map), crack_width_map.shape)
+max_width = crack_width_map[max_idx]
+print(f"Ancho máximo estimado: {max_width:.2f} píxeles en {max_idx}")
+
+# Visualización
+plt.figure(figsize=(8, 6))
+plt.imshow(crack_width_map, cmap='jet')
+plt.scatter(max_idx[1], max_idx[0], color='white', s=80, edgecolors='black', label='Ancho máximo')
+plt.title('Mapa de ancho de grietas')
+plt.colorbar(label='Ancho (píxeles)')
+plt.legend()
+plt.show()
