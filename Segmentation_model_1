@@ -1,0 +1,123 @@
+from tensorflow.keras.applications import MobileNet
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Lambda, Conv2D, Conv2DTranspose, Concatenate, BatchNormalization, Activation, Dropout
+
+import tensorflow as tf
+from tensorflow.keras.optimizers import Adam
+
+import tensorflow as tf
+import os
+import random
+import numpy as np
+
+
+
+# ------------------------------------------------------------------------------
+os.environ['PYTHONHASHSEED'] = '42'
+os.environ['TF_DETERMINISTIC_OPS'] = '1'
+
+random.seed(42)
+np.random.seed(42)
+tf.random.set_seed(42)
+
+def conv_block(inputs, num_filters):
+    x = Conv2D(num_filters, 3,kernel_initializer="he_normal", padding="same")(inputs)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
+    x = Dropout(0.1)(x)
+
+    x = Conv2D(num_filters, 3,kernel_initializer="he_normal", padding="same")(x)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
+
+    return x
+
+def decoder_block(inputs, skip, num_filters):
+    x = Conv2DTranspose(num_filters, (2, 2), strides=2, padding="same")(inputs)
+    x = Concatenate()([x, skip])
+    x = conv_block(x, num_filters)
+
+    return x
+
+# Input
+inputs = Input((512,512,3))
+x = Lambda(lambda x: x / 255)(inputs)
+
+# Pre-trained MobileNetV2
+encoder = MobileNet(include_top=False, weights="imagenet",input_tensor=x, alpha=1)
+encoder.summary()
+
+# Encoder
+s1 = encoder.get_layer("lambda").output
+s2 = encoder.get_layer("conv_pw_1_relu").output
+s3 = encoder.get_layer("conv_pw_3_relu").output
+s4 = encoder.get_layer("conv_pw_5_relu").output
+
+# Bridge
+b1 = encoder.get_layer("conv_pw_11_relu").output
+
+# Decoder
+d1 = decoder_block(b1, s4, 128)                         ## 512
+d2 = decoder_block(d1, s3, 64)                          ## 256
+d3 = decoder_block(d2, s2, 32)                          ## 128
+d4 = decoder_block(d3, s1, 16)                          ## 64
+
+# Output
+outputs = Conv2D(1, 1, padding="same", activation="sigmoid")(d4)
+
+model = Model(inputs=[inputs], outputs=[outputs])
+
+
+# ------------------------------------------------------------------------------
+
+
+model.compile(optimizer = Adam(learning_rate=0.001),
+              loss=Weighted_Cross_Entropy(10),
+              metrics=['accuracy', f1_score, iou_metric, precision_metric, recall_metric])
+
+model.summary()
+
+# ------------------------------------------------------------------------------
+
+
+# CALLBACKS
+
+checkpointer = tf.keras.callbacks.ModelCheckpoint(
+    'modelo1_b1.h5',
+    save_best_only=True,
+    monitor='val_f1_score',
+    mode='max',
+    verbose=1,
+    save_weights_only=False
+)
+
+early_stopping = tf.keras.callbacks.EarlyStopping(
+    monitor='val_f1_score',
+    mode='max',
+    patience=50,
+    restore_best_weights=True
+)
+
+logger = MetricsLogger('modelo2_b2.pkl')
+
+callbacks = [
+    checkpointer,
+    early_stopping,
+    tf.keras.callbacks.TensorBoard(log_dir='logs'),
+    logger
+]
+
+# ------------------------------------------------------------------------------
+
+
+# ENTRENAMIENTO
+results1 = model.fit(
+    X_train3, Y_train3,
+    validation_data=(X_test, Y_test),
+    batch_size=4,
+    epochs=200,
+    shuffle=True,
+    callbacks=callbacks
+)
+
+
