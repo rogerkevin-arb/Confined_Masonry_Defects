@@ -1,0 +1,112 @@
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import os
+import matplotlib.pyplot as plt
+from PIL import Image
+
+#---------------------------------------------------------------------------
+
+!pip install split-folders pillow ultralytics
+!pip install roboflow
+
+#---------------------------------------------------------------------------
+
+
+from roboflow import Roboflow
+rf = Roboflow(api_key="4kCXQVv3472M9OQVjdSg")
+project = rf.workspace("pelota-fzva7").project("spalling-7ltve")
+version = project.version(5)
+dataset = version.download("yolov11")
+
+#---------------------------------------------------------------------------
+
+# Specify the path to the file
+file_path = '/content/Spalling--5/data.yaml'
+
+# Check if the file exists
+if os.path.exists(file_path):
+    print(f"The file at {file_path} exists.")
+else:
+    print(f"The file at {file_path} does not exist.")
+
+#---------------------------------------------------------------------------
+
+# Get the current working directory
+cwd = os.getcwd()
+print(f"Current working directory: {cwd}")
+
+# List all files and directories in the current directory
+files = os.listdir(cwd)
+print(f"Files and directories in '{cwd}': {files}")
+
+
+#---------------------------------------------------------------------------
+
+dir_path = cwd + "/sample_data"
+for files in os.listdir(dir_path):
+  os.remove(dir_path + "/" + files)
+os.rmdir(dir_path)
+
+#---------------------------------------------------------------------------
+
+from ultralytics import YOLO
+model = YOLO("yolo11l.pt")
+model.info()
+
+#---------------------------------------------------------------------------
+
+# os.chdir("/content")
+# Entrenar el modelo
+model.train(
+    data='/content/Spalling--5/data.yaml',
+    epochs=200,
+    imgsz=640,
+    batch=5,  # Ajusta según tu GPU
+    name="entrenamiento_spalling_masonry",
+    project="proyecto_spalling"
+)
+
+#---------------------------------------------------------------------------
+
+import os
+
+# Listar archivos en el directorio
+directory = "/content/proyecto_spalling/entrenamiento_spalling_masonry"
+if os.path.exists(directory):
+    print("Archivos en el directorio:")
+    print(os.listdir(directory))
+else:
+    print(f"El directorio {directory} no existe.")
+
+#---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
