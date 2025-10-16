@@ -1,0 +1,195 @@
+import tensorflow as tf
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Conv2D, Conv2DTranspose, Concatenate, BatchNormalization, Activation, MaxPooling2D, UpSampling2D, Dropout, multiply, add, Lambda
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras import backend as K
+from tensorflow.keras import layers
+# ------------------------------------------------------------------------------
+
+import os
+import random
+import numpy as np
+from matplotlib import pyplot as plt
+from datetime import datetime
+import cv2
+
+
+from focal_loss import BinaryFocalLoss
+from tensorflow.keras.layers import Layer
+# ------------------------------------------------------------------------------
+
+
+class RepeatChannels(Layer):
+    def __init__(self, rep, **kwargs):
+        super().__init__(**kwargs)
+        self.rep = rep
+
+    def call(self, inputs):
+        return tf.tile(inputs, [1, 1, 1, self.rep])
+
+def gating_signal(inputs, num_filters):
+    x = Conv2D(num_filters, 1, padding='same')(inputs)
+    x = BatchNormalization()(x)
+    x = Activation('relu')(x)
+    return x
+
+def attention_block(x, gating, num_filters):
+    shape_x = K.int_shape(x)
+
+    theta_x = Conv2D(num_filters, (2, 2), strides=(2, 2), padding='same')(x)
+
+    phi_g = Conv2D(num_filters, (1, 1), padding='same')(gating)
+    upsample_g = Conv2DTranspose(num_filters, (3, 3), strides=(1, 1), padding='same')(phi_g)
+
+    concat_xg = add([upsample_g, theta_x])
+    act_xg = Activation('relu')(concat_xg)
+
+    psi = Conv2D(1, (1 , 1), padding='same')(act_xg)
+    sigmoid_xg = Activation('sigmoid')(psi)
+
+    upsample_psi = UpSampling2D((2, 2))(sigmoid_xg)
+    upsample_psi = RepeatChannels(rep = shape_x[3])(upsample_psi)
+
+    y = multiply([upsample_psi, x])
+
+    result = Conv2D(num_filters, (1, 1), padding='same')(y)
+    resultbn = BatchNormalization()(result)
+    return resultbn
+
+def res_conv_block(inputs, num_filters):
+    x = Conv2D(num_filters, 3,kernel_initializer="he_normal", padding="same")(inputs)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
+    x = Dropout(0.1)(x)
+
+    x = Conv2D(num_filters, 3,kernel_initializer="he_normal", padding="same")(x)
+    x = BatchNormalization()(x)
+
+    shortcut = Conv2D(num_filters, 1,kernel_initializer="he_normal", padding="same")(inputs)
+    shortcut = BatchNormalization()(shortcut)
+
+    res = add([shortcut, x])
+    res = Activation("relu")(res)
+
+    return res
+
+# MODEL --------------------------------------------
+
+import tensorflow as tf
+import os
+import random
+import numpy as np
+from tensorflow.keras.applications import MobileNet
+
+# SEMILLAS PARA REPRODUCIBILIDAD
+os.environ['PYTHONHASHSEED'] = '42'
+random.seed(42)
+np.random.seed(42)
+tf.random.set_seed(42)
+
+#-------------------------------------------------------------------------------
+inputs = Input((512,512,3))
+x = Lambda(lambda x: x / 255)(inputs)
+
+# Pre-trained MobileNetV2
+encoder = MobileNet(include_top=False, weights="imagenet",input_tensor=x, alpha=1)
+encoder.summary()
+
+
+# Encoder
+s1 = encoder.get_layer("lambda_5").output
+s2 = encoder.get_layer("conv_pw_1_relu").output
+s3 = encoder.get_layer("conv_pw_3_relu").output
+s4 = encoder.get_layer("conv_pw_5_relu").output
+
+# Bridge
+b1 = encoder.get_layer("conv_pw_11_relu").output
+
+# decoder
+
+g1 = gating_signal(b1, 128)
+a1 = attention_block(s4, g1, 128)
+up = UpSampling2D(2)(b1)
+up = Concatenate()([up, a1])
+d1 = res_conv_block(up, 128)
+
+g2 = gating_signal(d1, 64)
+a2 = attention_block(s3, g2, 64)
+up2 = UpSampling2D(2)(d1)
+up2 = Concatenate()([up2, a2])
+d2 = res_conv_block(up2, 64)
+
+g3 = gating_signal(d2, 32)
+a3 = attention_block(s2, g3, 32)
+up3 = UpSampling2D(2)(d2)
+up3 = Concatenate()([up3, a3])
+d3 = res_conv_block(up3, 32)
+
+g4 = gating_signal(d3, 16)
+a4 = attention_block(s1, g4, 16)
+up4 = UpSampling2D(2)(d3)
+up4 = Concatenate()([up4, a4])
+d4 = res_conv_block(up4, 16)
+
+# Output
+outputs = Conv2D(1, 1, padding="same", activation="sigmoid")(d4)
+
+model = Model(inputs= [inputs], outputs=[outputs])
+
+# ------------------------------------------------------------------------------
+
+model.compile(optimizer= Adam(learning_rate=0.0008),
+              loss=Weighted_Cross_Entropy(10),
+              metrics=['accuracy', f1_score, iou_metric, precision_metric, recall_metric])
+model.summary()
+
+# ------------------------------------------------------------------------------
+
+checkpointer = tf.keras.callbacks.ModelCheckpoint(
+    'modelo2.h5',
+    save_best_only=True,
+    monitor='val_f1_score',
+    mode='max',
+    verbose=1,
+    save_weights_only=False
+)
+
+early_stopping = tf.keras.callbacks.EarlyStopping(
+    monitor='val_f1_score',
+    mode='max',
+    patience=50,
+    restore_best_weights=True
+)
+
+logger = MetricsLogger('modelo2.pkl')
+
+callbacks = [
+    checkpointer,
+    early_stopping,
+    tf.keras.callbacks.TensorBoard(log_dir='logs'),
+    logger
+]
+
+# ------------------------------------------------------------------------------
+
+# ENTRENAMIENTO
+results2 = model.fit(
+    X_train, Y_train,
+    validation_data=(X_test, Y_test),
+    batch_size=4,
+    epochs=250,
+    shuffle=True,
+    callbacks=callbacks
+)
+
+
+
+
+
+
+
+
+
+
+
+
