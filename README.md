@@ -16,26 +16,32 @@ Pioneering study on the detection of diverse defects in real confined masonry st
 ## Description
 This repository contains the main architectures developed for multiple computer vision tasks, including scale frame detection using HSV filters, semantic segmentation, skeletonization, brick type classification, and spalling region detection. It also includes the original dataset used for training and evaluation.
 
-![Architecture Overview](images/visualirr.png)
+
 
 <p align="center">
-  <img src="images/visualirr.png" width="500">
+  <img src="images/visualirr.png" width="700">
 </p>
 
 ## Models
 The proposed model for the crack semantic segmentation task is based on the UNet MobileNet architecture. Attention modules and residual blocks were incorporated as enhancements, along with a reduction in the number of parameters and an input adaptation for 512×512 pixel images. This results in the model we call Attention Res UNet MobileNet.
 
-![Architecture Overview](images/Arq.jpg)
+
 
 <p align="center">
-  <img src="images/Arq.png" width="500">
+  <img src="images/Arq.jpg" width="700">
 </p>
 
 In addition, the proposed algorithm for brick classification consists of two stages. The first involves preprocessing the 512×512 image before feeding it into the CNN model, which corresponds to the second stage.
-![Architecture Overview](images/Cla.jpg)
+
+<p align="center">
+  <img src="images/Cla.png" width="700">
+</p>
 
 The convolutional layers helped identify patterns, which was further enhanced through transfer learning.
-![Architecture Overview](images/Conv2D.png)
+
+<p align="center">
+  <img src="images/Conv2D.png" width="700">
+</p>
 
 
 ## How to Run the Models
