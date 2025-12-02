@@ -18,11 +18,18 @@ This repository contains the main architectures developed for multiple computer 
 
 ![Architecture Overview](images/visualirr.png)
 
+<p align="center">
+  <img src="images/visualirr.png" width="500">
+</p>
+
 ## Models
 The proposed model for the crack semantic segmentation task is based on the UNet MobileNet architecture. Attention modules and residual blocks were incorporated as enhancements, along with a reduction in the number of parameters and an input adaptation for 512×512 pixel images. This results in the model we call Attention Res UNet MobileNet.
 
 ![Architecture Overview](images/Arq.jpg)
 
+<p align="center">
+  <img src="images/Arq.png" width="500">
+</p>
 
 In addition, the proposed algorithm for brick classification consists of two stages. The first involves preprocessing the 512×512 image before feeding it into the CNN model, which corresponds to the second stage.
 ![Architecture Overview](images/Cla.jpg)
