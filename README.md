@@ -40,7 +40,7 @@ In addition, the proposed algorithm for brick classification consists of two sta
 The convolutional layers helped identify patterns, which was further enhanced through transfer learning.
 
 <p align="center">
-  <img src="images/Conv2D.png" width="700">
+  <img src="images/Conv2D.png" width="500">
 </p>
 
 
@@ -49,22 +49,27 @@ The convolutional layers helped identify patterns, which was further enhanced th
 To run the code, you must have the training and validation images and masks ready. These should meet the orthogonality recommendations and have an approximate resolution of 5 pixels/mm for the crack semantic segmentation task. These characteristics are not required for the other tasks involving classification and bounding box detection.
 
 ![Architecture Overview](images/visualirr2.png)
+
 The validation dataset for the brick type classification task undergoes pixel reduction through resizing and grayscale conversion, which helps decrease information load while maintaining good accuracy in predicting the corresponding class.
 
-![Architecture Overview](images/clasL.png)
+<p align="center">
+  <img src="images/clasL.png" width="500">
+</p>
+
 For spalling region detection, by providing high-quality data, the YOLOv11 architecture successfully detected spalling in bricks, mortar, and confinement elements.
 
 ![Architecture Overview](images/EjeSpa.png)
 
-
 It is recommended to use Google Colab, separating the code blocks marked with “#----” into individual cells. If you want to test the pre-trained models for confined masonry with irregular surfaces, you can download the .h5 files and run them using the validation images.
 
 ![Architecture Overview](images/escalaHsv.png)
+
 ![Architecture Overview](images/esque.png)
 
 ## Dataset
 
 The Dataset folder contains the data used for training and testing the models.
+
 ## References
 
 El modelo propuesto para la tarea de segmentación surge apartir del modelo propuesto en el estudio de Dais et .al [1]. Asimismo se referencian otras fuentes que se usaron.  
