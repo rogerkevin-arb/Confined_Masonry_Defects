@@ -64,9 +64,15 @@ For spalling region detection, by providing high-quality data, the YOLOv11 archi
 
 It is recommended to use Google Colab, separating the code blocks marked with “#----” into individual cells. If you want to test the pre-trained models for confined masonry with irregular surfaces, you can download the .h5 files and run them using the validation images.
 
-![Architecture Overview](images/escalaHsv.png)
 
-![Architecture Overview](images/esque.png)
+<p align="center">
+  <img src="images/escalaHsv.png" width="800">
+</p>
+
+
+<p align="center">
+  <img src="images/esque.png" width="800">
+</p>
 
 ## Dataset
 
