@@ -53,12 +53,14 @@ To run the code, you must have the training and validation images and masks read
 The validation dataset for the brick type classification task undergoes pixel reduction through resizing and grayscale conversion, which helps decrease information load while maintaining good accuracy in predicting the corresponding class.
 
 <p align="center">
-  <img src="images/clasL.png" width="500">
+  <img src="images/clasL.png" width="600">
 </p>
 
 For spalling region detection, by providing high-quality data, the YOLOv11 architecture successfully detected spalling in bricks, mortar, and confinement elements.
 
-![Architecture Overview](images/EjeSpa.png)
+<p align="center">
+  <img src="images/EjeSpa.png" width="600">
+</p>
 
 It is recommended to use Google Colab, separating the code blocks marked with “#----” into individual cells. If you want to test the pre-trained models for confined masonry with irregular surfaces, you can download the .h5 files and run them using the validation images.
 
